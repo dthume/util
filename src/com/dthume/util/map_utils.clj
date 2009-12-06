@@ -1,4 +1,6 @@
-(ns com.dthume.util.map-utils)
+(ns #^{:doc "Commonly functions for processing maps"
+       :author "David Thomas Hume"}
+  com.dthume.util.map-utils)
 
 (defn filter-keys
   "Returns a map of the entries in m for which (pred (key entry)) is true.

@@ -1,4 +1,8 @@
-(ns com.dthume.util.xrels
+(ns #^{:doc
+"Essentially a straight wrapper for clojure.set, but with arguments ordered to
+consistently suit ->> where appropriate"
+       :author "David Thomas Hume"}
+    com.dthume.util.xrels
   (:require [clojure.set :as set]
             [com.dthume.util.map-utils :as map-u]))
 
