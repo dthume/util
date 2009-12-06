@@ -1,15 +1,3 @@
-# xrels
+# Clojure Utilities
 
-FIXME: write description
-
-## Usage
-
-FIXME: write
-
-## Installation
-
-FIXME: write
-
-## License
-
-FIXME: write
+Random Clojure utilities. While this is intended to be a catch-all for utilities too common to be part of a larger project, and too small to warrant a project of their own, a general rule is that code in this project will only have dependencies to Clojure and Clojure Contrib. 
