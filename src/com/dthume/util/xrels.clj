@@ -10,7 +10,6 @@
     (cons max (remove #(identical? max %) coll))))
 
 (def difference set/difference)
-;(def intersection set/intersection)
 (def map-invert set/map-invert)
 (def select set/select)
 
@@ -30,28 +29,23 @@ Like clojure.set/union, but slightly more efficient for larger numbers of sets"
                 (transient (first sets))
                 (rest sets))))))
 
-(def intersection
-     (let [recur-f (fn [s1 s2]
-                     (reduce (fn [result item]
-                               (if (contains? s2 item)
-                                 result
-                                 (disj! result item)))
-                              s1 s1))]
-       (fn
-         ([s1] s1)
-         ([s1 s2]
-            (if (empty? s1)
-              s1
-              (if (< (count s2) (count s1))
-                (recur s2 s1)
-                (let [intersect-pair (fn [result item]
-                                       (if (contains? s2 item)
-                                         result
-                                         (disj! result item)))]
-                  (persistent! (reduce intersect-pair (transient s1) s1))))))
-         ([s1 s2 & sets]
-            (let [b-sets (bubble-max-key #(- (count %)) (conj sets s2 s1))]
-              (reduce intersection (first b-sets) (rest b-sets)))))))
+(defn intersection
+  "Return a set that is the intersection of the input sets.  Like
+clojure.set/intersection, but uses transients internally"
+  ([s1] s1)
+  ([s1 s2]
+     (if (empty? s1)
+       s1
+       (if (< (count s2) (count s1))
+         (recur s2 s1)
+         (let [intersect-pair (fn [result item]
+                                (if (contains? s2 item)
+                                  result
+                                  (disj! result item)))]
+           (persistent! (reduce intersect-pair (transient s1) s1))))))
+  ([s1 s2 & sets]
+     (let [b-sets (bubble-max-key #(- (count %)) (conj sets s2 s1))]
+       (reduce intersection (first b-sets) (rest b-sets)))))
 
 (defn index
   "Like clojure.set/index, but with arguments ordered to suit ->> usage"
