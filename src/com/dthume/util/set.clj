@@ -14,7 +14,7 @@ for working with sets and relations"
 
 (defn bubble-max-key
   "Move a maximal element of coll according to fn k (which returns a number) 
-   to the front of coll."
+to the front of coll. Copied from clojure.set, whose implementation is private"
   [k coll]
   (let [max (apply max-key k coll)]
     (cons max (remove #(identical? max %) coll))))
@@ -44,15 +44,15 @@ Like clojure.set/union, but slightly more efficient for larger numbers of sets"
 clojure.set/intersection, but uses transients internally"
   ([s1] s1)
   ([s1 s2]
-     (if (empty? s1)
-       s1
-       (if (< (count s2) (count s1))
-         (recur s2 s1)
-         (let [intersect-pair (fn [result item]
-                                (if (contains? s2 item)
-                                  result
-                                  (disj! result item)))]
-           (persistent! (reduce intersect-pair (transient s1) s1))))))
+     (cond
+       (empty? s1) s1
+       (< (count s2) (count s1)) (recur s2 s1)
+       :else
+       (let [intersect-pair (fn [result item]
+                              (if (contains? s2 item)
+                                result
+                                (disj! result item)))]
+         (persistent! (reduce intersect-pair (transient s1) s1)))))
   ([s1 s2 & sets]
      (let [b-sets (bubble-max-key #(- (count %)) (conj sets s2 s1))]
        (reduce intersection (first b-sets) (rest b-sets)))))
