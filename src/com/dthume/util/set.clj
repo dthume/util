@@ -1,12 +1,13 @@
 (ns #^{:doc
 "Essentially a straight wrapper for clojure.set, but with arguments ordered to
-consistently suit ->> where appropriate"
+consistently suit ->> where appropriate.  Also contains a few extra utilities
+for working with sets and relations"
        :author "David Thomas Hume"}
-    com.dthume.util.xrels
+    com.dthume.util.set
   (:require [clojure.set :as set]
             [com.dthume.util.map-utils :as map-u]))
 
-(defn- bubble-max-key
+(defn bubble-max-key
   "Move a maximal element of coll according to fn k (which returns a number) 
    to the front of coll."
   [k coll]
@@ -29,7 +30,7 @@ Like clojure.set/union, but slightly more efficient for larger numbers of sets"
   ([s1 s2 & sets]
      (let [sets (bubble-max-key count (conj sets s2 s1))]
        (persistent!
-        (reduce (fn [r i] (reduce conj! r i))
+        (reduce #(reduce conj! %1 %2)
                 (transient (first sets))
                 (rest sets))))))
 
@@ -77,7 +78,7 @@ suit ->> usage"
 (defn project-if
   "Like project, but project only keys matching pred"
   [pred xrel]
-  (set (map (fn [m] (map-u/filter-keys pred m)) xrel)))
+  (set (map #(map-u/filter-keys pred %) xrel)))
 
 (defn rename
   "Like clojure.set/rename, but with arguments ordered to suit ->> usage"
@@ -90,9 +91,9 @@ suit ->> usage"
   (set/rename-keys map kmap))
 
 (defn transform
-  "Like clojure.core/map, but results in a fresh rel.  Not lazy"
+  "Like clojure.core/map, but results in a fresh rel. Not lazy"
   [f xrel]
-  (into #{} (map f xrel)))
+  (set (map f xrel)))
 
 (defn select-key
   "Like select, but apply pred to the value mapped to k in each rel"
@@ -100,8 +101,8 @@ suit ->> usage"
   (select (comp pred k) xrel))
 
 (defn distinct-keys
-  "Return a set of the distinct-keys contained in xrels"
+  "Return a set of the distinct-keys contained in xrels. Not lazy"
   [xrels]
   (reduce union
-	  (map #(into #{} (keys %))
+	  (map #(set (keys %))
 	       xrels)))
