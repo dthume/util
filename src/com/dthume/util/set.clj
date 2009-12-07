@@ -7,6 +7,11 @@ for working with sets and relations"
   (:require [clojure.set :as set]
             [com.dthume.util.map-utils :as map-u]))
 
+(defn- as-set
+  "Returns s if it is already a set, otherwise (set s)"
+  [s]
+  (if (set? s) s (set s)))
+
 (defn bubble-max-key
   "Move a maximal element of coll according to fn k (which returns a number) 
    to the front of coll."
@@ -31,7 +36,7 @@ Like clojure.set/union, but slightly more efficient for larger numbers of sets"
      (let [sets (bubble-max-key count (conj sets s2 s1))]
        (persistent!
         (reduce #(reduce conj! %1 %2)
-                (transient (first sets))
+                (transient (as-set (first sets)))
                 (rest sets))))))
 
 (defn intersection
@@ -103,6 +108,4 @@ suit ->> usage"
 (defn distinct-keys
   "Return a set of the distinct-keys contained in xrels. Not lazy"
   [xrels]
-  (reduce union
-	  (map #(set (keys %))
-	       xrels)))
+  (apply union (map #(set (keys %)) xrels)))
