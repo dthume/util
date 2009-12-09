@@ -1,7 +1,8 @@
 pom-generated.xml
 Manifest.txt
-xrels.jar
+util.jar
 lib/
+classes/
 # ignore emacs files
 *~
 \#*\#

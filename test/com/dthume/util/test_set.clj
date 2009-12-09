@@ -32,5 +32,6 @@
   (is (= *1-5* (s/union *1-3* *3-5*)))
   (is (= *1-10* (s/union *1-5* *6-10*)))
   (is (= *1-5* (s/union *1-5*)))
+  (is (= *1-5* (s/union *1-5* *1-5*)))
   (is (empty? (s/union #{})))
   (is (empty? (s/union nil))))
