@@ -3,7 +3,7 @@
 consistently suit ->> where appropriate.  Also contains a few extra utilities
 for working with sets and relations"
        :author "David Thomas Hume"}
-    com.dthume.util.set
+  com.dthume.util.set
   (:require [clojure.set :as set]
             [com.dthume.util.map-utils :as map-u]))
 
