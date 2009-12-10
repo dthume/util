@@ -30,8 +30,8 @@ Like clojure.set/union, but slightly more efficient for larger numbers of sets"
   ([s1] s1)
   ([s1 s2]
      (if (< (count s1) (count s2))
-       (into s2 s1)
-       (into s1 s2)))
+       (into (as-set s2) s1)
+       (into (as-set s1) s2)))
   ([s1 s2 & sets]
      (let [sets (bubble-max-key count (conj sets s2 s1))]
        (persistent!
