@@ -1,20 +1,23 @@
 (ns #^{:doc
 "Useful clojure abstractions which provide some of facilities found in
-java.net in a more clojuresque way."
+java.io in a more clojuresque way."
        :author "David Thomas Hume"}
-  com.dthume.util.io)
+  com.dthume.util.io
+  (:import [java.io File]))
 
-(def file? (partial instance? java.io.File))
+(defn file?
+  "Returns logical true iff x is a java.io.File"
+  [x] (instance? File x))
 
 (defprotocol Fileable
-  (file [x] "Return an appropriate file for x"))
+  (#^File file [x] "Return an appropriate file for x"))
 
 (extend-protocol Fileable
   java.io.File
     (file [f] f)
   java.net.URI
-    (file [u] (java.io.File. u))
+    (file [u] (File. u))
   java.net.URL
-    (file [u] (java.io.File. (.toURI u)))
+    (file [u] (File. (.toURI u)))
   java.lang.String
-    (file [s] (java.io.File. s)))
+    (file [s] (File. s)))
