@@ -10,6 +10,7 @@ java.io in a more clojuresque way."
   [x] (instance? File x))
 
 (defprotocol Fileable
+  "Protocol for objects which can be represented as java.io.File objects"
   (#^File file [x] "Return an appropriate file for x"))
 
 (extend-protocol Fileable

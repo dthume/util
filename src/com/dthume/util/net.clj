@@ -9,6 +9,7 @@ java.net in a more clojuresque way."
   [x] (instance? java.net.URI x))
 
 (defprotocol URIable
+  "Protocol for objects which have an associated java.net.URI"
   (uri [x] "Return an appropriate URI for x"))
 
 (extend-protocol URIable
