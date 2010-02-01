@@ -100,6 +100,11 @@ suit ->> usage"
   [f xrel]
   (set (map f xrel)))
 
+(defn add-index
+  "Applies f to each rel in xrel and associates the result with k. Lazy."
+  [k f xrel]
+  (map #(assoc %1 k (f %1)) xrel))
+
 (defn select-key
   "Like select, but apply pred to the value mapped to k in each rel"
   [k pred xrel]
