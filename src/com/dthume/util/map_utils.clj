@@ -30,8 +30,13 @@ associating each result with the corresponding key."
   ([fmap m]
      (into m (map (fn [[k f]] [k (f m)]) fmap))))
 
-(defn bind
+(defn bind*
   "Takes a function and keys, and returns a function which takes a
 map and applies f, using the values corresponding to keys as arguments."
   [f & keys]
   (fn [m] (apply f (map m keys))))
+
+(defmacro bind
+  "Macro version of bind*"
+  [f & keys]
+  `(fn [~(symbol "m")] (~f ~@(for [k# keys] `(~(symbol "m") ~k#)))))
