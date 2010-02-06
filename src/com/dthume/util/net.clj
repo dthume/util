@@ -15,9 +15,9 @@ java.net in a more clojuresque way."
 (extend-protocol URIable
   java.net.URI
     (uri [u] u)
-  java.io.File
-    (uri [f] (.toURI f))
   java.net.URL
     (uri [u] (.toURI u))
+  java.io.File
+    (uri [f] (.toURI f))
   java.lang.String
     (uri [s] (java.net.URI. s)))

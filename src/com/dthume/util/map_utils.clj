@@ -23,3 +23,9 @@ Not lazy"
   "Returns a map of the entries in m, with vals mapped using f"
   [f m]
   (into {} (map (fn [[k v]] [k (f v)] m))))
+
+(defn derive-keys
+  "Takes a map of keys to functions, applies each function to m,
+associating each result with the corresponding key."
+  ([fmap m]
+     (into m (map (fn [[k f]] [k (f m)]) fmap))))
