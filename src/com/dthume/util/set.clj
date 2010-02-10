@@ -113,4 +113,4 @@ suit ->> usage"
 (defn distinct-keys
   "Return a set of the distinct-keys contained in xrels. Not lazy"
   [xrels]
-  (apply union (map #(set (keys %)) xrels)))
+  (set (mapcat keys xrels)))
