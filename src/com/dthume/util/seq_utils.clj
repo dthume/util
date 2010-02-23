@@ -1,4 +1,4 @@
-(ns #^{:doc "Commonly functions for processing sequences"
+(ns #^{:doc "Common functions for processing sequences"
        :author "David Thomas Hume"}
   com.dthume.util.seq-utils)
 
@@ -28,3 +28,12 @@ case the first item of c will never be passed to f as an item."
        (let [ni (f i (first c))]
          (lazy-seq (cons ni (map-aggregate f ni (rest c)))))
        nil)))
+
+(defn partition-nths
+  "Partition c into a sequence of sequences at the indexes contained in nths"
+  [nths c]
+  (if (and (seq c) (seq nths))
+    (let [i (first nths)]
+      (lazy-seq
+        (cons (take i c) (partition-nths (rest nths) (drop i c)))))
+    nil))
