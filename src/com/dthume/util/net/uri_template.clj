@@ -45,18 +45,20 @@
 
 (defmethod compile-op "opt"
   [op arg vars]
-  (let [vars (into #{} vars)]
+  (let [vars (into #{} vars)
+        re-c (str "(" (Pattern/quote arg) ")?")]
     (reify URITemplateComponent
-      (re-component [] (str "(" (Pattern/quote arg) ")?"))
+      (re-component [] re-c)
       (re-group-count [] (int 1))
       (bind-component [context] (if (some #(contains? context %) vars) arg ""))
       (apply-component [s] {}))))
 
 (defmethod compile-op "neg"
   [op arg vars]
-  (let [vars (into #{} vars)]
+  (let [vars (into #{} vars)
+        re-c (str "(" (Pattern/quote arg) ")?")]
     (reify URITemplateComponent
-      (re-component [] (str "(" (Pattern/quote arg) ")?"))
+      (re-component [] re-c)
       (re-group-count [] (int 1))
       (bind-component [context] (if (some #(contains? context %) vars) "" arg))
       (apply-component [s] {}))))
@@ -65,9 +67,10 @@
   [op arg vars]
   (if (= (count vars) 1)
     (let [quoted-arg (Pattern/quote arg)
+          re-c (str "((" quoted-arg "[^" quoted-arg "]*?)*?)??")
           v-name (first vars)]
       (reify URITemplateComponent
-        (re-component [] (str "((" quoted-arg "[^" quoted-arg "]*?)*?)??"))
+        (re-component [] re-c)
         (re-group-count [] (int 2))
         (bind-component [context]
           (if-let [v-val (get context v-name)]
@@ -85,9 +88,10 @@
   [op arg vars]
   (if (= (count vars) 1)
     (let [quoted-arg (Pattern/quote arg)
+          re-c (str "(([^" quoted-arg "]*?(?:" quoted-arg "))*?)??")
           v-name (first vars)]
       (reify URITemplateComponent
-        (re-component [] (str "(([^" quoted-arg "]*?(?:" quoted-arg "))*?)??"))
+        (re-component [] re-c)
         (re-group-count [] (int 2))
         (bind-component [context]
           (if-let [v-val (get context v-name)]
@@ -103,7 +107,34 @@
 
 (defmethod compile-op "join"
   [op arg vars]
-  (format "[JOIN: %s %s" arg vars))
+  (let [qarg (Pattern/quote arg)
+        make-var-re #(format "((%s)=([^%s]*?))?"
+                             (Pattern/quote (name %))
+                             qarg)
+        re-c (str "("
+                  (->> vars
+                       (map make-var-re)
+                       (string/join (str "(?:" qarg ")")))
+                  ")?")
+        gc (int (inc (* 3 (count vars))))
+        vs (zipmap vars (map name vars))
+        var-group-indexes (fn [i]
+                            (let [i1 (* 3 (inc i))]
+                              [i1 (inc i1)]))
+        group-indexes (map (comp var-group-indexes first) (seq/indexed vars))]
+    (reify URITemplateComponent
+      (re-component [] re-c)
+      (re-group-count [] gc)
+      (bind-component [context]
+        (let [create-pairs (fn [[k v]]
+                             (if-let [value (get context k)]
+                               (str v "=" (get context k))))]
+          (->> vs (map create-pairs) (filter identity) (string/join arg))))
+      (apply-component [match]
+        (into {}
+              (for [[k v] group-indexes]
+                [(keyword (nth match (int k)))
+                 (nth match (int v))]))))))
 
 (defmethod compile-op "list"
   [op arg vars]
@@ -212,6 +243,7 @@
   (def *uri-t4* "http://example.org{-prefix|/|slist}?bar={bar}")
   (def *uri-t5* "http://example.org/{-suffix|/|slist}?bar={bar}")
   (def *uri-t6* "http://example.org/{-list|/|slist}?bar={bar}")
+  (def *uri-t7* "http://example.org/{-join|&|foo,bar,slist}?bar={bar}")
   (uri-t/compile *uri-t*)
   (uri-t/matches? *uri-t* "http://example.org/foo-val?bar=bar-val")
   (uri-t/bind *uri-t* {:foo "foo-val" :bar "bar-val"})
@@ -220,6 +252,9 @@
   (uri-t/bind *uri-t3* {:foo "foo-val" :bar "bar-val"})
   (uri-t/bind *uri-t3* {:bar "foo-val" :me "bar-val"})
   (uri-t/bind *uri-t6* {:bar "foo-val" :me "bar-val" :slist ["li1" "li2" "li3"]})
+  (uri-t/matches? *uri-t7* "http://example.org/foo=fval&bar=bval&slist=sval?bar=barv")
+  (uri-t/apply *uri-t7* "http://example.org/foo=fval&bar=bval&slist=sval?bar=barv")
+  (uri-t/bind *uri-t7* {:bar "foo-val" :me "bar-val" :slist "foo"})
   (uri-t/bind *uri-t4* {:bar "foo-val" :me "bar-val" :slist "li1"})
   (uri-t/bind *uri-t4* {:bar "foo-val" :me "bar-val" :slist nil})
   (uri-t/bind *uri-t4* {:bar "foo-val" :me "bar-val"})
