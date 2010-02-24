@@ -140,11 +140,12 @@
   [op arg vars]
   (if (= (count vars) 1)
     (let [quoted-arg (Pattern/quote arg)
-          v-name (first vars)]
+          v-name (first vars)
+          re-c (str "(([^" quoted-arg "]*?"
+                    "(?:(?:" quoted-arg ")"
+                    "[^" quoted-arg "]*?" ")*?)??)")]
       (reify URITemplateComponent
-        (re-component [] (str "(([^" quoted-arg "]*?"
-                                "(?:(?:" quoted-arg ")"
-                                "[^" quoted-arg "]*?" ")*?)??)"))
+        (re-component [] re-c)
         (re-group-count [] (int 2))
         (bind-component [context]
           (if-let [v-val (get context v-name)]
@@ -252,7 +253,6 @@
   (uri-t/bind *uri-t3* {:foo "foo-val" :bar "bar-val"})
   (uri-t/bind *uri-t3* {:bar "foo-val" :me "bar-val"})
   (uri-t/bind *uri-t6* {:bar "foo-val" :me "bar-val" :slist ["li1" "li2" "li3"]})
-  (uri-t/matches? *uri-t7* "http://example.org/foo=fval&bar=bval&slist=sval?bar=barv")
   (uri-t/apply *uri-t7* "http://example.org/foo=fval&bar=bval&slist=sval?bar=barv")
   (uri-t/bind *uri-t7* {:bar "foo-val" :me "bar-val" :slist "foo"})
   (uri-t/bind *uri-t4* {:bar "foo-val" :me "bar-val" :slist "li1"})
