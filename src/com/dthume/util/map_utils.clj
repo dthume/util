@@ -40,3 +40,12 @@ map and applies f, using the values corresponding to keys as arguments."
   "Macro version of bind*"
   [f & keys]
   `(fn [~(symbol "m")] (~f ~@(for [k# keys] `(~(symbol "m") ~k#)))))
+
+(defn apply-keymap
+  "Takes a map of keys -> fns and optional fn n-f, and maps over map m,
+transforming values with the fn mapped to the corresponding key in km.
+n-f, which defaults to identity, is used when (get km k) is logical false."
+  ([km m]
+     (apply-keymap km identity m))
+  ([km n-f m]
+     (into {} (for [[k v] m] [k ((or (get km k) n-f) v)]))))
