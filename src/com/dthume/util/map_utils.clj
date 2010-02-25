@@ -1,34 +1,37 @@
 (ns #^{:doc "Commonly functions for processing maps"
        :author "David Thomas Hume"}
-  com.dthume.util.map-utils)
+  com.dthume.util.map-utils
+  (:import [clojure.lang MapEntry]))
 
 (defn filter-keys
-  "Returns a map of the entries in m for which (pred (key entry)) is true.
-Not lazy"
+  "Returns a lazy sequence of the entries in m for which (pred (key entry))
+is true."
   [pred m]
-  (into {} (filter #(pred (key %)) m)))
+  (filter (comp pred key) m))
 
 (defn filter-vals
-  "Returns a map of the entries in m for which (pred (val entry)) is true.
-Not lazy"
+  "Returns a lazy sequence of the entries in m for which (pred (val entry))
+is true."
   [pred m]
-  (into {} (filter #(pred (val %)) m)))
+  (filter (comp pred val) m))
 
-(defn map-keys
-  "Returns a map of the entries in m, with keys mapped using f"
-  [f m]
-  (into {} (map (fn [[k v]] [(f k) v]) m)))
+(defn bind-key
+  "Takes a function, returns a function that takes a map entry, and returns
+a new map entry of [(f (key e)) (val e)]"
+  [f]
+  (fn [e] (MapEntry. (f (key e)) (val e))))
 
-(defn map-vals
-  "Returns a map of the entries in m, with vals mapped using f"
-  [f m]
-  (into {} (map (fn [[k v]] [k (f v)] m))))
+(defn bind-val
+  "Takes a function, returns a function that takes a map entry, and returns
+a new map entry of [(key e) (f (val e))]"
+  [f]
+  (fn [e] (MapEntry. (key e) (f (val e)))))
 
 (defn derive-keys
   "Takes a map of keys to functions, applies each function to m,
 associating each result with the corresponding key."
   ([fmap m]
-     (into m (map (fn [[k f]] [k (f m)]) fmap))))
+     (into m (map (fn [[k f]] (MapEntry. k (f m))) fmap))))
 
 (defn bind*
   "Takes a function and keys, and returns a function which takes a
@@ -41,11 +44,13 @@ map and applies f, using the values corresponding to keys as arguments."
   [f & keys]
   `(fn [~(symbol "m")] (~f ~@(for [k# keys] `(~(symbol "m") ~k#)))))
 
-(defn apply-keymap
-  "Takes a map of keys -> fns and optional fn n-f, and maps over map m,
-transforming values with the fn mapped to the corresponding key in km.
-n-f, which defaults to identity, is used when (get km k) is logical false."
-  ([km m]
-     (apply-keymap km identity m))
-  ([km n-f m]
-     (into {} (for [[k v] m] [k ((or (get km k) n-f) v)]))))
+(defn map-by-key
+  "Takes a map of keys -> fns km and optional fn n-f, and returns a function
+which takes a map entry, and returns a new mapping from the key to the result
+of applying the function mapped to the corresponding key in km. n-f, which
+defaults to identity, is used when the value mapped to k in km is logical
+false."
+  ([km]
+     (map-by-key km identity))
+  ([km n-f]
+     (fn [[k v]] (MapEntry. k ((or (get km k) n-f) v)))))
